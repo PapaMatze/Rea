@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<fillTypeOverrides>
+  <fillTypeOverride name="WHEAT" density="780"/>
+  <fillTypeOverride name="BARLEY" density="760"/>
+  <fillTypeOverride name="MAIZE" density="740"/>
+  <fillTypeOverride name="CANOLA" density="640"/>
+  <fillTypeOverride name="OAT" density="510"/>
+  <fillTypeOverride name="SOYBEAN" density="760"/>
+  <fillTypeOverride name="FORAGE" density="600"/>
+  <fillTypeOverride name="GRASS_WINDROW" density="280"/>
+  <fillTypeOverride name="DRYGRASS_WINDROW" density="130"/>
+  <fillTypeOverride name="STRAW" density="100"/>
+  <fillTypeOverride name="MANURE" density="740"/>
+  <fillTypeOverride name="LIQUIDMANURE" density="1015"/>
+  <fillTypeOverride name="SILAGE" density="600"/>
+  <fillTypeOverride name="DIRT" density="1450"/>
+</fillTypeOverrides>
