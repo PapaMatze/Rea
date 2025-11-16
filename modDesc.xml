@@ -62,6 +62,32 @@ Die auf gezogene Werkzeuge aufgebrachte Kraft wird nun an der richtigen Stelle a
 - Verringerte Leistung für Erntemaschinen für Zuckerrüben und Kartoffeln.
 
 </de>
+<fr> 
+L’objectif de ce mod est de rendre le jeu plus réaliste et de rendre l’adaptation du véhicule à la tâche plus gratifiante. 
+Le but est d’en faire un mod universel. Ce mod prend en charge le multijoueur et les serveurs dédiés. 
+Aucune modification des fichiers XML n’est nécessaire. Certaines données XML sont remplacées !
+
+La force de traction pour les charrues, cultivateurs, rouleaux et semoirs est influencée par le type et l’état du sol.
+Les presses à balles, remorques autochargeuses et moissonneuses consomment de la puissance en fonction de la vitesse de remplissage et de la densité du matériau.
+
+Par exemple :
+- Semer directement dans le chaume demande plus de puissance que de semer sur un champ cultivé.
+- Utiliser un rouleau sur un champ labouré demande plus de puissance que sur un champ prêt à semer.
+- Récolter un champ à haut rendement demande plus de puissance qu’un champ à faible rendement.
+- Les matériaux plus légers demandent moins de puissance que les lourds, les balles de foin sont plus faciles à faire que celles d’herbe.
+
+La force appliquée aux outils tractés est désormais exercée à l’endroit correct.
+- Le côté gauche ou droit peut recevoir plus ou moins de force selon le type et l’état du sol de chaque côté.
+- La force est également appliquée latéralement, rendant les outils plus enclins à suivre leur propre trajectoire.
+
+1.0.1.0
+- Les récolteuses de betteraves et de pommes de terre ne reçoivent plus trop de puissance.
+- Correction d’un bug où la modification de la largeur d’un outil pouvait provoquer une erreur du nœud d’état du sol.
+
+1.0.2.0
+- Amélioration des performances.
+- Réduction de la puissance nécessaire pour les récolteuses de betteraves et de pommes de terre.
+</fr>
     </description>
 	<l10n>
 	</l10n>
