@@ -1,155 +1,209 @@
--- ===========================================================
--- REA Implements FS25 – Realistic Implements Physics v1.0.5
--- Werte: 2.5 / 2.8 / 2.6 + Helfer-Boost
--- ===========================================================
+--============================================================--
+--  REA Implements v1.0.7 – by Papa_Matze
+--  Realistische Physik für:
+--    ✔ Anhänger (Wackelphysik / Trailer Sway)
+--    ✔ Traktoren (leichtes Wanken)
+--    ✔ Drescher Zusatzmasse + Wanken
+--    ✔ Güllefässer Gewicht & Massenträgheit
+--    ✔ Helfer-Gewichtsverstärkung
+--    ✔ Spuren / Bodenverformung Booster für alle Maps
+--============================================================--
 
 REAimplements = {}
-REAimplements.version = "1.0.5"
+REAimplements.debug = false
 
--- Realismus-Faktoren (aus deiner Vorgabe)
-REAimplements.ImplementResistance = 2.6   -- Grundwiderstand der Anbaugeräte
-REAimplements.PullForceScale      = 2.8   -- Zugkraft-Faktor (wie „schwer“ es zieht)
-REAimplements.SoilSinkFactor      = 2.5   -- wie „weich“ der Boden für Geräte ist
-
-REAimplements.HelperWeightFactor  = 2.4   -- Helfer fühlt mehr Gewicht
-REAimplements.HelperGripBoost     = 1.8   -- mehr Grip für Helfer-Räder unter Last
-
-REAimplements.Debug = false
-
-----------------------------------------------------------------
--- Hilfsfunktionen
-----------------------------------------------------------------
-local function isHelperActive(vehicle)
-    if vehicle.getIsAIActive ~= nil then
-        return vehicle:getIsAIActive()
-    end
-    return false
+------------------------------------------------------------
+-- INITIALISIERUNG
+------------------------------------------------------------
+function REAimplements.prerequisitesPresent(specializations)
+    return true
 end
 
-local function hasWorkingImplement(vehicle)
-    if vehicle.getAttachedImplements == nil then
-        return false
-    end
-
-    for _, impl in ipairs(vehicle:getAttachedImplements()) do
-        local object = impl.object
-        if object ~= nil and object.spec_workArea ~= nil then
-            if object.getIsWorkAreaActive ~= nil and object:getIsWorkAreaActive() then
-                return true
-            end
-        end
-    end
-
-    return false
+function REAimplements.registerEventListeners(vehicleType)
+    SpecializationUtil.registerEventListener(vehicleType, "onLoad",   REAimplements)
+    SpecializationUtil.registerEventListener(vehicleType, "onUpdate", REAimplements)
 end
 
-----------------------------------------------------------------
--- Haupt-Update
-----------------------------------------------------------------
-function REAimplements:update(dt)
-    if g_currentMission == nil or g_currentMission.vehicles == nil then
-        return
-    end
-
-    for _, vehicle in ipairs(g_currentMission.vehicles) do
-        self:updateVehicleImplements(vehicle, dt)
-    end
+function REAimplements:onLoad(savegame)
+    self.spec_REAimplements = {
+        initialized = false,
+        lastUpdate  = 0,
+    }
 end
 
-----------------------------------------------------------------
--- Physik für ein Fahrzeug + seine Anbaugeräte
-----------------------------------------------------------------
-function REAimplements:updateVehicleImplements(vehicle, dt)
-    if vehicle.getAttachedImplements == nil then
-        return
-    end
 
-    local impls = vehicle:getAttachedImplements()
-    if impls == nil or #impls == 0 then
-        return
-    end
+------------------------------------------------------------
+-- TIEFE SPUREN BOOSTER (global, für ALLE Maps)
+------------------------------------------------------------
+local function REA_applyTerrainOverride()
+    if g_currentMission == nil then return end
+    local t = g_currentMission.terrainDetailHeight
+    if t == nil then return end
 
-    local isHelper = isHelperActive(vehicle)
-    local anyWorking = hasWorkingImplement(vehicle)
+    ------------------------------------------------------------
+    -- Felder: +30% mehr Spurtiefe
+    ------------------------------------------------------------
+    t.heightScale       = 2.73    -- vorher 2.1 → jetzt +30%
+    t.displacementScale = 2.73
+    t.compactFactor     = 2.4
+    t.heightMaxValue    = 2.35
 
-    -- nur arbeiten, wenn wirklich ein Gerät aktiv ist
-    if not anyWorking then
-        return
-    end
+    ------------------------------------------------------------
+    -- Feldwege / Dirt Roads: +30% Verstärkung
+    ------------------------------------------------------------
+    if t.terrainMaterials ~= nil then
+        for _, mat in pairs(t.terrainMaterials) do
+            if mat.name ~= nil then
+                local n = mat.name:lower()
+                if  n:find("dirt")
+                or  n:find("road")
+                or  n:find("path")
+                or  n:find("feldweg") then
 
-    ----------------------------------------------------------------
-    -- 1. Zusätzliche Zugkraft / Widerstand
-    ----------------------------------------------------------------
-    local activeAreaCount = 0
-
-    for _, impl in ipairs(impls) do
-        local object = impl.object
-        if object ~= nil and object.spec_workArea ~= nil then
-            if object.getIsWorkAreaActive ~= nil and object:getIsWorkAreaActive() then
-                -- einfach: jedes aktive WorkArea-Tool zählt
-                activeAreaCount = activeAreaCount + 1
-            end
-        end
-    end
-
-    if activeAreaCount > 0 and vehicle.components ~= nil and vehicle.components[1] ~= nil then
-        local comp = vehicle.components[1]
-
-        -- Grundkraft
-        local baseForce = activeAreaCount * REAimplements.ImplementResistance
-
-        -- hochskalieren
-        local force = baseForce * REAimplements.PullForceScale
-
-        -- Helfer boost
-        if isHelper then
-            force = force * REAimplements.HelperWeightFactor
-        end
-
-        -- Kraft in Fahrtrichtung entgegengesetzt ansetzen
-        local dirX, dirY, dirZ = localDirectionToWorld(comp.node, 0, 0, -1)
-        local px, py, pz = getWorldTranslation(comp.node)
-
-        addForce(comp.node, dirX * force, dirY * force, dirZ * force, px, py, pz, true)
-
-        -- Debug optional
-        if REAimplements.Debug then
-            DebugUtil.drawDebugTextAtWorldPos(px, py + 2, pz,
-                string.format("REA Implements: Areas=%d Force=%.1f", activeAreaCount, force),
-                0, 1, 0, 1)
-        end
-    end
-
-    ----------------------------------------------------------------
-    -- 2. Bodenwiderstand / Grip-Anpassung an Rädern
-    ----------------------------------------------------------------
-    if vehicle.spec_wheels ~= nil and vehicle.spec_wheels.wheels ~= nil then
-        for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
-            -- Basis-Friction
-            wheel.frictionScale = wheel.frictionScale or 1.0
-
-            -- Mehr Widerstand durch „weichen“ Boden unter Gerät
-            local soilFactor = 1.0 + (REAimplements.SoilSinkFactor * 0.10)
-            wheel.frictionScale = wheel.frictionScale * soilFactor
-
-            -- Helfer bekommt mehr Grip unter Last
-            if isHelper then
-                wheel.frictionScale = wheel.frictionScale * REAimplements.HelperGripBoost
+                    mat.heightScale       = (mat.heightScale or 1.0)       * 1.30
+                    mat.displacementScale = (mat.displacementScale or 1.0) * 1.30
+                end
             end
         end
     end
 end
 
-----------------------------------------------------------------
--- FS25 Event-Hooks
-----------------------------------------------------------------
-function REAimplements:loadMap()
-    print(string.format("REAimplements v%s geladen (Realismus 2.5 / 2.8 / 2.6, Helfer aktiv)", REAimplements.version))
+
+------------------------------------------------------------
+-- HELFER GEWICHTSVERSTÄRKUNG
+------------------------------------------------------------
+local function REA_helperWeightActive(vehicle)
+    return vehicle.getIsAIActive ~= nil and vehicle:getIsAIActive()
 end
 
-function REAimplements:deleteMap() end
-function REAimplements:mouseEvent(posX, posY, isDown, isUp, button) end
-function REAimplements:keyEvent(unicode, sym, modifier, isDown) end
-function REAimplements:updateTick(dt) end
 
-addModEventListener(REAimplements)
+------------------------------------------------------------
+-- WACKELPHYSIK für ALLE Fahrzeuge
+-- (Anhänger, Traktoren, Drescher)
+------------------------------------------------------------
+local function REA_applyVehicleSway(vehicle, dt)
+    if vehicle.components == nil or vehicle.components[1] == nil then
+        return
+    end
+
+    local swayFactor = 0.016
+    local massFactor = 1.0
+
+    if vehicle.getTotalMass ~= nil then
+        local m = vehicle:getTotalMass()
+        massFactor = MathUtil.clamp(m / 8000, 0.6, 2.5)
+    end
+
+    local speed = 0
+    if vehicle.getLastSpeedReal ~= nil then
+        speed = vehicle:getLastSpeedReal() * 3.6
+    elseif vehicle.getLastSpeed ~= nil then
+        speed = vehicle:getLastSpeed()
+    end
+
+    if speed < 3 then
+        return
+    end
+
+    -- Fahrzeugtyp-spezifische Verstärkung:
+    if vehicle.spec_attachable ~= nil then      -- Anhänger stärker
+        swayFactor = swayFactor * 1.5
+    end
+    if vehicle.spec_motorized ~= nil then       -- Traktoren moderat
+        swayFactor = swayFactor * 1.0
+    end
+    if vehicle.typeName == "combine" then       -- Drescher träger
+        swayFactor = swayFactor * 0.85
+    end
+
+    local sway = math.sin(g_time * 0.00123) * swayFactor * massFactor
+
+    local comp = vehicle.components[1]
+    local node = comp.node
+    local x, y, z = getTranslation(node)
+
+    local lx, ly, lz = localDirectionToWorld(node, 1, 0, 0)
+
+    local force = sway * 20000
+    addForce(node, lx * force, 0, lz * force, x, y, z, true)
+end
+
+
+------------------------------------------------------------
+-- GÜLLEFASS MASS BOOST
+------------------------------------------------------------
+local function REA_applySlurryMass(vehicle)
+    if vehicle.spec_fillUnit == nil then return end
+    if vehicle.spec_fillUnit.fillUnits == nil then return end
+
+    for _, fu in ipairs(vehicle.spec_fillUnit.fillUnits) do
+        if fu.fillType == FillType.LIQUIDMANURE
+        or fu.fillType == FillType.DIGESTATE then
+
+            local fillLevel = fu.fillLevel or 0
+            local cap       = fu.capacity or 1
+            local ratio     = fillLevel / cap
+
+            local bonusMass = ratio * 3500
+            if bonusMass > 0 and vehicle.addMass ~= nil then
+                vehicle:addMass(bonusMass, 0, 0, 0)
+            end
+        end
+    end
+end
+
+
+------------------------------------------------------------
+-- DRESCHER TRÄGHEIT
+------------------------------------------------------------
+local function REA_applyHarvesterPhysics(vehicle)
+    if vehicle.typeName ~= "combine" then return end
+    if vehicle.getTotalMass == nil then return end
+
+    local m     = vehicle:getTotalMass()
+    local extra = m * 0.15
+
+    if vehicle.addMass ~= nil then
+        vehicle:addMass(extra, 0, 0, 0)
+    end
+end
+
+
+------------------------------------------------------------
+-- HAUPT UPDATE
+------------------------------------------------------------
+function REAimplements:onUpdate(dt)
+    local spec = self.spec_REAimplements
+    if spec == nil then return end
+
+    --------------------------------------------------------
+    -- TERRAIN BOOSTER (Spuren)
+    --------------------------------------------------------
+    REA_applyTerrainOverride()
+
+    --------------------------------------------------------
+    -- WACKELPHYSIK
+    --------------------------------------------------------
+    REA_applyVehicleSway(self, dt)
+
+    --------------------------------------------------------
+    -- GÜLLEFASS PHYSIK
+    --------------------------------------------------------
+    REA_applySlurryMass(self)
+
+    --------------------------------------------------------
+    -- DRESCHER TRÄGHEIT
+    --------------------------------------------------------
+    REA_applyHarvesterPhysics(self)
+
+    --------------------------------------------------------
+    -- HELFER EXTRA GEWICHT
+    --------------------------------------------------------
+    if REA_helperWeightActive(self) and self.addMass ~= nil then
+        self:addMass(4500, 0, 0, 0)
+    end
+end
+
+--============================================================--
+--  ENDE
+--============================================================--

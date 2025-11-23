@@ -1,96 +1,35 @@
-<?xml version='1.0' encoding='utf-8'?>
-<modDesc descVersion="100">
+<?xml version="1.0" encoding="utf-8"?>
+<modDesc descVersion="104">
     <author>Papa_Matze</author>
-	<loadModDesc priority="999" /><version>1.0.3</version>
-	<title>FS25_REA_by_Papa_Matze<en>REA25 Implements</en>
+    <loadModDesc priority="999" />
+    <version>1.0.7</version>
+
+    <title>
+        <en>REA25 Implements</en>
+        <de>REA25 Implements</de>
     </title>
-    <description>Realistische Gewichte kombiniert mit REA-Implementen. Multiplayer-fest; Server und Clients müssen identische Mod-Datei verwenden.<en>
-The goal of this mod is to make the game feel more realistic and
-customizing the vehicle for the task more rewarding.
-The goal is to make the mod universal.
-This mod supports multiplayer and dedicated servers.
-No changes in XML is needed. Some data from XML is overwritten!
 
-Pulling force for plows, cultivators, roller and sowingmachines is affected by ground type and state.
-Balers, loading wagons and harvesters uses power based on fillspeed and density of material.
+    <description>
+        <en>
+Adds realistic trailer sway, slurry tank mass, harvester inertia, helper weight boost and global terrain deformation boost.
+Multiplayer supported.
+        </en>
 
-For example:
-- Seeding directly into the stubble demands more power then seeding a cultivated field.
-- Running a roller in a plowed field demands more power then a seedad field.
-- Harvesting higher yeild demands more power then a low yeilding field.
-- Lighter materials demands less power then heavy, baling hay is easier then grass.
-
-The force applied to pulled tools is now applied on the correct place.
-- Left or right side can get less or more force applied deending in the ground type and state on each side.
-- Force is also applied from the sides to make implements more prone to follow their own path.
-
-1.0.1.0
-- Harvesters for sugerbeets and potatos no longer get to much power applied.
-- If width of implement was changed groundstate node could cause errors, this is fixed.
-
-1.0.2.0
-- Improved performace.
-- Decreased power applied to harvesters for sugerbeets and potatos.
-
-</en>
-<de>
-Das Ziel dieses Mods ist es, das Spiel realistischer zu machen und
-das Anpassen des Fahrzeugs für die Aufgabe lohnender.
-Das Ziel ist es, den Mod universell zu machen.
-Dieser Mod unterstützt Multiplayer und dedizierte Server.
-Es sind keine XML-Änderungen erforderlich. Einige Daten aus XML werden überschrieben!
-
-Die Zugkraft für Pflüge, Grubber, Walzen- und Sämaschinen wird von Bodenart und Bodenbeschaffenheit beeinflusst.
-Ballenpressen, Ladewagen und Erntemaschinen verbrauchen Leistung basierend auf Füllgeschwindigkeit und Materialdichte.
-
-Beispielsweise:
-- Das Säen direkt in die Stoppel erfordert mehr Kraft als das Säen eines kultivierten Feldes.
-- Der Betrieb einer Walze in einem gepflügten Feld erfordert mehr Leistung als ein Saatfeld.
-- Das Ernten eines höheren Ertrags erfordert mehr Leistung als ein Feld mit niedrigem Ertrag.
-- Leichtere Materialien erfordern weniger Kraft als schwere, Heuballen ist einfacher als Gras.
-
-Die auf gezogene Werkzeuge aufgebrachte Kraft wird nun an der richtigen Stelle aufgebracht.
-- Die linke oder rechte Seite kann je nach Bodenart und Zustand auf jeder Seite weniger oder mehr Kraft aufgebracht werden.
-- Die Kraft wird auch von den Seiten aufgebracht, um die Anbaugeräte anfälliger dafür zu machen, ihrem eigenen Weg zu folgen.
-
-1.0.1.0
-- Erntemaschinen für Zuckerrüben und Kartoffeln bekommen nicht mehr zu viel Kraft zugeführt.
-- Wenn die Breite des Anbaugeräts geändert wurde, konnte der Grundzustandsknoten Fehler verursachen, dies wurde behoben.
-
-1.0.2.0
-- Verbesserte Leistung.
-- Verringerte Leistung für Erntemaschinen für Zuckerrüben und Kartoffeln.
-
-</de>
+        <de>
+Fügt realistische Anhängerwackelphysik, Güllefass-Masse, Drescherträgheit, Helfer-Gewichtsboost und globale Spurenverstärkung hinzu.
+Multiplayer wird unterstützt.
+        </de>
     </description>
-	<l10n>
-	</l10n>
+
+    <l10n></l10n>
+
     <iconFilename>icon.dds</iconFilename>
-	<multiplayer supported="true" />
+
+    <multiplayer supported="true" />
+
     <extraSourceFiles>
         <sourceFile filename="REAimplements.lua" />
     </extraSourceFiles>
-<descriptionEN>Realistic weights combined with REA implements. Multiplayer-ready; ensure server and clients use identical mod file.</descriptionEN><fillTypeOverrides filename="fillTypeOverrides.xml" />
-<specializations>
-    <specialization name="REAimplements" className="REAimplements" filename="REAimplements.lua" />
-</specializations>
 
-<vehicleTypes>
-    <type name="tractor">
-        <specialization name="REAimplements" />
-    </type>
-    <type name="harvester">
-        <specialization name="REAimplements" />
-    </type>
-    <type name="selfPropelledForageHarvester">
-        <specialization name="REAimplements" />
-    </type>
-    <type name="selfPropelledSprayer">
-        <specialization name="REAimplements" />
-    </type>
-    <type name="implement">
-        <specialization name="REAimplements" />
-    </type>
-</vehicleTypes>
-
+    <date>22.11.2025</date>
 </modDesc>
